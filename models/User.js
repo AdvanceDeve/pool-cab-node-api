@@ -11,7 +11,7 @@ const User = sequelize.define("users", {
         allowNull: false, 
         unique: true,
         validate: {
-            is: /^[0-9]{10}$/  // ✅ Ensures a 10-digit phone number (adjust as needed)
+            is: /^[0-9]{10}$/  
         }
     },
     role: { 

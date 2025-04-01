@@ -2,6 +2,10 @@ const express = require("express");
 const { register, login, listUsers } = require("../controllers/userController");
 const { auth, isAdmin } = require("../middlewares/auth");
 const {createRide,listRides,getRideById,updateRide,deleteRide} = require("../controllers/rideController");
+const {createBooking,updateBooking,getBookings,getBookingById,deleteBooking,approveBooking} = require("../controllers/bookingController");
+const {uploadFile} = require("../controllers/fileController");
+const upload = require("../middlewares/upload");
+const File = require("../models/File");
 const router = express.Router();
 
 //Users
@@ -15,5 +19,16 @@ router.get("/listRides", auth, listRides);
 router.get("/getRideById/:id", auth, getRideById);
 router.put("/updateRide/:id", auth, updateRide);
 router.delete("/deleteRide/:id", auth, deleteRide);
+
+//Book rides
+router.post("/createBooking",auth,createBooking);
+router.get("/getBookings",auth,getBookings);
+router.put("/updateBooking/:id",auth,updateBooking);
+router.get("/getBookingById/:id",auth,getBookingById);
+router.delete("/deleteBooking/:id",auth,deleteBooking);
+router.post('/approveBooking',auth,approveBooking);
+
+
+router.post("/upload",auth, upload.single("file"), uploadFile);
 
 module.exports = router;
