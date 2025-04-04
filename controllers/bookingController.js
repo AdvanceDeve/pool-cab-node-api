@@ -11,7 +11,7 @@ exports.createBooking = async (req, res) => {
       return res.status(404).json({ message: "Ride not found" });
     }
 
-    const booking_user = await Booking.count({ where: { user_id } });
+    const booking_user = await Booking.count({ where: { user_id,ride_id } });
 
     if (booking_user === 0) {
       const bookingCount = await Booking.count({ where: { ride_id } });
@@ -29,7 +29,7 @@ exports.createBooking = async (req, res) => {
         updated_by,
       });
 
-      return res.status(201).json({ message: "Booking created successfully", booking });
+      return res.status(200).json({ message: "Booking created successfully", booking });
     } else {
       return res.status(400).json({ message: "Already Booked" });
     }

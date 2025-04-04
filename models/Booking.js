@@ -50,7 +50,7 @@ const Booking = sequelize.define(
     },
     updated_by: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     updated_at: {
       type: DataTypes.DATE,
@@ -66,8 +66,11 @@ const Booking = sequelize.define(
   }
 );
  
-Booking.belongsTo(Ride, { foreignKey: 'ride_id', as: 'Ride', onDelete: 'CASCADE' });
-Booking.belongsTo(User, { foreignKey: 'user_id', as: 'User', onDelete: 'CASCADE' });
+// Booking.belongsTo(Ride, { foreignKey: 'ride_id', as: 'Ride', onDelete: 'CASCADE' });
+// Booking.belongsTo(User, { foreignKey: 'user_id', as: 'User', onDelete: 'CASCADE' }); 
+
+Booking.belongsTo(User, { foreignKey: 'user_id' });
+Booking.belongsTo(Ride, { foreignKey: 'ride_id' });
 
 
 module.exports = Booking;

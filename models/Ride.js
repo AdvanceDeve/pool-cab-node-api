@@ -1,6 +1,6 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../config/database");
-
+const sequelize = require("../config/database"); 
+const Booking = require("./Booking");
 class Ride extends Model {}
 
 Ride.init(
@@ -16,7 +16,7 @@ Ride.init(
     departure_date: { type: DataTypes.DATEONLY, allowNull: false },
     start_time: { type: DataTypes.TIME, allowNull: false },
     is_free: { type: DataTypes.ENUM("free", "paid"), allowNull: false },
-    price: { type: DataTypes.FLOAT, allowNull: true },
+    price: { type: DataTypes.FLOAT, allowNull: true, defaultValue:0.00 },
     seat: { type: DataTypes.INTEGER, allowNull: false },
     vehicle_type: { type: DataTypes.ENUM("car", "scooty", "bike"), allowNull: false },
     vehicle_number: { type: DataTypes.STRING, allowNull: false },
@@ -38,5 +38,7 @@ Ride.init(
     updatedAt: "updated_at",
   }
 );
+ 
+Ride.hasMany(Booking, { foreignKey: 'ride_id' });
 
 module.exports = Ride;

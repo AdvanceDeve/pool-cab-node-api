@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/database"); 
+const Booking = require("./Booking");
 
 const User = sequelize.define("users", {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -23,6 +24,6 @@ const User = sequelize.define("users", {
 }, {
     timestamps: true,
     underscored: true 
-});
-
+}); 
+User.hasMany(Booking, { foreignKey: 'user_id' });
 module.exports = User;

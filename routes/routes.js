@@ -1,7 +1,7 @@
 const express = require("express");
 const { register, login, listUsers } = require("../controllers/userController");
 const { auth, isAdmin } = require("../middlewares/auth");
-const {createRide,listRides,getRideById,updateRide,deleteRide} = require("../controllers/rideController");
+const {createRide,listRides,getRideById,updateRide,deleteRide,getRideWithBookings} = require("../controllers/rideController");
 const {createBooking,updateBooking,getBookings,getBookingById,deleteBooking,approveBooking} = require("../controllers/bookingController");
 const {uploadFile} = require("../controllers/fileController");
 const upload = require("../middlewares/upload");
@@ -17,6 +17,7 @@ router.get("/users", auth, listUsers);  // Admin sees all users, regular users s
 router.post("/createRide",auth,createRide);
 router.get("/listRides", auth, listRides);
 router.get("/getRideById/:id", auth, getRideById);
+router.get("/getRideWithBookings/:id", auth, getRideWithBookings);
 router.put("/updateRide/:id", auth, updateRide);
 router.delete("/deleteRide/:id", auth, deleteRide);
 

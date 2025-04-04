@@ -1,9 +1,8 @@
-const { Op, Sequelize } = require("sequelize");
-const Ride = require("../models/Ride");
-const Booking = require("../models/Booking");
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
+const { Op } = require("sequelize");
+const { Ride, Booking, User } = require("../models"); // ✅ Import models from index.js
+const dayjs = require("dayjs");
 require("dotenv").config();
+
 
 exports.createRide = async (req, res) => {
   try {
@@ -19,34 +18,37 @@ exports.createRide = async (req, res) => {
         .json({ message: "Access denied. Only riders can create rides." });
     }
 
+    console.log('res',res);
+
     const {
       pickup,
       drop_point,
       departure_date,
       start_time,
-      is_free,
-      price,
+      is_free,     
       seat,
       vehicle_type,
       vehicle_number,
       note,
       status,
     } = req.body;
-
+    let { price } = req.body;
     if (
       !pickup ||
       !drop_point ||
       !start_time ||
       !is_free ||
-      !price ||
       !seat ||
       !vehicle_type ||
-      !vehicle_number ||
-      !status
+      !vehicle_number
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
-     
+    let _status = 'yet_to_start';
+    let _price = 0.0;
+    if(price == null || price == ''){
+      price = _price;
+    }
     const newRide = await Ride.create({
       user_id: req.user.id,
       pickup,
@@ -59,7 +61,7 @@ exports.createRide = async (req, res) => {
       vehicle_type,
       vehicle_number,
       note,
-      status,
+      status:_status,
       created_by: req.user.id,
       updated_by: req.user.id,
     });
@@ -103,7 +105,7 @@ exports.listRides = async (req, res) => {
     }else{
       whereCondition.departure_date  = { [Op.like]: `%${departure_date}%`};
     }
-
+    // console.log('role:',req.user.role)
     if (req.user.role == "rider") {
       whereCondition.user_id = req.user.id;
       if (status != "") {
@@ -118,15 +120,15 @@ exports.listRides = async (req, res) => {
         whereCondition.status = status ? status : { [Op.ne]: "completed" };
       }
     } 
-
+    // console.log('whereCondition::',whereCondition)
     if(start_time_from != '' && start_time_to != ''){
       whereCondition.start_time = { [Op.between]: [start_time_from, start_time_to] };
     }
     // else{
     //   if (req.user.role != "rider") {
-    //     var _start_time_from = dayjs().format('h:mm A');
+    //     var _start_time_from = dayjs().format('H:mm');
     //     console.log('formattedTime::',_start_time_from)
-    //     whereCondition.start_time = { [Op.between]: [_start_time_from, '11:59 PM'] };
+    //     whereCondition.start_time = { [Op.between]: [_start_time_from, '23:59:59'] };
     //   }
     // }
 
@@ -136,10 +138,10 @@ exports.listRides = async (req, res) => {
      
     const rides = await Ride.findAndCountAll({
       where: whereCondition,
-      order: [["id", order]],
+      order: [["start_time", order]],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      //logging: console.log,  // Logs all executed queries
+      logging: console.log,  // Logs all executed queries
     });
 
     res.json({ total: rides.count, rides: rides.rows });
@@ -231,4 +233,54 @@ exports.deleteRide = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+exports.getRideWithBookings = async (req, res) => {
+  try {
+    const { rideId } = req.params;
+
+    const rideDetails = await Ride.findOne({
+      where: { id: rideId },
+      include: [
+        {
+          model: Booking,
+          as: "booking",
+          include: [
+            {
+              model: User,
+              as: "user",
+              attributes: ["id", "name", "phone", "email"],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!rideDetails) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    res.json(rideDetails);
+  } catch (error) {
+    console.error("Error fetching ride details:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+  
+
+
+function convertTo24HourFormat(time12h) {
+  let [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+
+  if (modifier.toLowerCase() === 'pm' && hours !== '12') {
+      hours = String(Number(hours) + 12);
+  } else if (modifier.toLowerCase() === 'am' && hours === '12') {
+      hours = '00';
+  }
+
+  return `${hours}:${minutes}`;
+}
  
+
