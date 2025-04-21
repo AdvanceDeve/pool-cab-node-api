@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database"); // Import Sequelize instance
-const Ride = require("./Ride"); // Import Ride model
-const User = require("./User"); // Import User model
+// const Ride = require("./Ride"); // Import Ride model
+// const User = require("./User"); // Import User model
 
 const Booking = sequelize.define(
   "Booking",
@@ -15,20 +15,20 @@ const Booking = sequelize.define(
     ride_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Ride,
-        key: "id",
-      },
-      onDelete: "CASCADE",
+      // references: {
+      //   model: Ride,
+      //   key: "id",
+      // },
+      // onDelete: "CASCADE",
     },
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: User,
-        key: "id",
-      },
-      onDelete: "CASCADE",
+      // references: {
+      //   model: User,
+      //   key: "id",
+      // },
+      // onDelete: "CASCADE",
     },
     status: {
       type: DataTypes.ENUM("booked", "canceled"),
@@ -69,8 +69,8 @@ const Booking = sequelize.define(
 // Booking.belongsTo(Ride, { foreignKey: 'ride_id', as: 'Ride', onDelete: 'CASCADE' });
 // Booking.belongsTo(User, { foreignKey: 'user_id', as: 'User', onDelete: 'CASCADE' }); 
 
-Booking.belongsTo(User, { foreignKey: 'user_id' });
-Booking.belongsTo(Ride, { foreignKey: 'ride_id' });
+// Booking.belongsTo(User, { foreignKey: 'user_id' });
+// Booking.belongsTo(Ride, { foreignKey: 'ride_id' });
 
 
 module.exports = Booking;

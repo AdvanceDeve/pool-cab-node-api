@@ -39,6 +39,6 @@ Ride.init(
   }
 );
  
-Ride.hasMany(Booking, { foreignKey: 'ride_id' });
+// Ride.hasMany(Booking, { foreignKey: 'ride_id' });
 
 module.exports = Ride;

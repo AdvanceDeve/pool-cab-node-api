@@ -1,7 +1,9 @@
 const { Op } = require("sequelize");
-const { Ride, Booking, User } = require("../models"); // ✅ Import models from index.js
+const Ride = require("../models/Ride");
+const Booking = require("../models/Booking");
 const dayjs = require("dayjs");
 require("dotenv").config();
+const sequelize = require("../config/database"); 
 
 
 exports.createRide = async (req, res) => {
@@ -17,8 +19,6 @@ exports.createRide = async (req, res) => {
         .status(403)
         .json({ message: "Access denied. Only riders can create rides." });
     }
-
-    console.log('res',res);
 
     const {
       pickup,
@@ -100,16 +100,20 @@ exports.listRides = async (req, res) => {
     };
 
     const formattedDate = dayjs().format('YYYY-MM-DD');
-    if(departure_date == ''){      
-      whereCondition.departure_date  = formattedDate;
-    }else{
-      whereCondition.departure_date  = { [Op.like]: `%${departure_date}%`};
+    if(req.user.role != "rider"){
+      if(departure_date == ''){      
+        whereCondition.departure_date  = formattedDate;
+      }else{
+        whereCondition.departure_date  = { [Op.like]: `%${departure_date}%`};
+      }
     }
-    // console.log('role:',req.user.role)
+    
     if (req.user.role == "rider") {
       whereCondition.user_id = req.user.id;
       if (status != "") {
         whereCondition.status = status;
+      }else{
+        whereCondition.status = status ? status : { [Op.ne]: "deleted" };
       }
     } else if (req.user.role == "admin") {
       whereCondition.status = status;
@@ -141,12 +145,11 @@ exports.listRides = async (req, res) => {
       order: [["start_time", order]],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      logging: console.log,  // Logs all executed queries
+      // logging: console.log,  // Logs all executed queries
     });
 
     res.json({ total: rides.count, rides: rides.rows });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: "Error fetching users", error });
   }
 };
@@ -234,40 +237,75 @@ exports.deleteRide = async (req, res) => {
   }
 };
 
-
-
 exports.getRideWithBookings = async (req, res) => {
   try {
-    const { rideId } = req.params;
+    const { id: rideId } = req.params;
 
-    const rideDetails = await Ride.findOne({
-      where: { id: rideId },
-      include: [
-        {
-          model: Booking,
-          as: "booking",
-          include: [
-            {
-              model: User,
-              as: "user",
-              attributes: ["id", "name", "phone", "email"],
-            },
-          ],
-        },
-      ],
-    });
+    const [results] = await sequelize.query(
+      `SELECT 
+        r.id,r.user_id AS rider_id,r.pickup,r.drop_point,r.departure_date,r.start_time, 
+        b.id AS booking_id, b.status AS booking_status, b.is_approved,
+        u.id AS user_id, u.name, u.email, u.phone
+      FROM rides r
+      LEFT JOIN booking b ON b.ride_id = r.id
+      LEFT JOIN users u ON u.id = b.user_id
+      WHERE r.id = :rideId`,
+      {
+        replacements: { rideId },
+      }
+    );
 
-    if (!rideDetails) {
+    if (!results || results.length === 0) {
       return res.status(404).json({ message: "Ride not found" });
     }
 
-    res.json(rideDetails);
+    res.json(results);
   } catch (error) {
     console.error("Error fetching ride details:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-  
+
+
+exports.getRideAndBookingCounts = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Step 1: Get ride count and IDs for the specific user, excluding 'deleted' status
+    const rides = await Ride.findAll({
+      attributes: [
+        [sequelize.fn('COUNT', sequelize.col('id')), 'ride_count'],
+        [sequelize.fn('GROUP_CONCAT', sequelize.col('id')), 'ids']
+      ],
+      where: {
+        created_by: userId,
+        status: { [Op.not]: 'deleted' }
+      },
+      raw: true
+    });
+
+    const rideIds = rides[0].ids ? rides[0].ids.split(',').map(id => parseInt(id)) : [];
+    const rideCount = rides[0].ride_count.toString();
+
+    // Step 2: Get total bookings where ride_id IN (user's rides)
+    const bookingCount = await Booking.count({
+      where: {
+        ride_id: {
+          [Op.in]: rideIds
+        }
+      }
+    });
+
+    return res.status(200).json({
+      rides: rideCount,
+      bookings: bookingCount.toString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching ride/booking counts:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 
 function convertTo24HourFormat(time12h) {

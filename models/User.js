@@ -25,5 +25,5 @@ const User = sequelize.define("users", {
     timestamps: true,
     underscored: true 
 }); 
-User.hasMany(Booking, { foreignKey: 'user_id' });
+// User.hasMany(Booking, { foreignKey: 'user_id' });
 module.exports = User;

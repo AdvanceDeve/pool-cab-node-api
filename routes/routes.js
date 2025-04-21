@@ -1,7 +1,7 @@
 const express = require("express");
 const { register, login, listUsers } = require("../controllers/userController");
 const { auth, isAdmin } = require("../middlewares/auth");
-const {createRide,listRides,getRideById,updateRide,deleteRide,getRideWithBookings} = require("../controllers/rideController");
+const {createRide,listRides,getRideById,updateRide,deleteRide,getRideWithBookings,getRideAndBookingCounts} = require("../controllers/rideController");
 const {createBooking,updateBooking,getBookings,getBookingById,deleteBooking,approveBooking} = require("../controllers/bookingController");
 const {uploadFile} = require("../controllers/fileController");
 const upload = require("../middlewares/upload");
@@ -20,6 +20,7 @@ router.get("/getRideById/:id", auth, getRideById);
 router.get("/getRideWithBookings/:id", auth, getRideWithBookings);
 router.put("/updateRide/:id", auth, updateRide);
 router.delete("/deleteRide/:id", auth, deleteRide);
+router.get("/getRideAndBookingCounts/:id", auth, getRideAndBookingCounts);
 
 //Book rides
 router.post("/createBooking",auth,createBooking);
