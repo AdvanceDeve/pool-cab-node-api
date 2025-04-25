@@ -3,7 +3,7 @@ const { register, login, listUsers } = require("../controllers/userController");
 const { auth, isAdmin } = require("../middlewares/auth");
 const {createRide,listRides,getRideById,updateRide,deleteRide,getRideWithBookings,getRideAndBookingCounts} = require("../controllers/rideController");
 const {createBooking,updateBooking,getBookings,getBookingById,deleteBooking,approveBooking} = require("../controllers/bookingController");
-const {uploadFile} = require("../controllers/fileController");
+const {uploadFile,getFiles} = require("../controllers/fileController");
 const upload = require("../middlewares/upload");
 const File = require("../models/File");
 const router = express.Router();
@@ -32,5 +32,6 @@ router.post('/approveBooking',auth,approveBooking);
 
 
 router.post("/upload",auth, upload.single("file"), uploadFile);
+router.post("/document/getFiles",auth, upload.single("file"), getFiles);
 
 module.exports = router;
