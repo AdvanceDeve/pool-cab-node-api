@@ -5,10 +5,7 @@ exports.uploadFile = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "Invalid file type!" });
     }
-    console.log('req.file:',req.file)
-    console.log('req.body:',req.body)
-    console.log('req.user:',req.user)
-
+     
     if(req.body.doc_type != ''){
       var doc_array = [
         'license','rcbook','attachment'
@@ -34,19 +31,19 @@ exports.uploadFile = async (req, res) => {
         updated_by: req.user.id,
       });
   
-      res.status(200).json({ message: "File uploaded successfully!", file: newFile });
+      return res.status(200).json({ message: "File uploaded successfully!", file: newFile });
     }else{
-      res.status(400).json({ message: "doc_type is manadetary"});
+      return res.status(400).json({ message: "doc_type is manadetary"});
     }
 
     
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
 
-exports.file_approve = async (req, res) => {
+exports.fileApprove = async (req, res) => {
   try {
     const {id,status} = req.body;
     if(req.user.role == 'admin'){
@@ -68,5 +65,28 @@ exports.file_approve = async (req, res) => {
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ error: error.message });
+  }
+}
+
+
+exports.getFiles = async (req, res) => {
+  try {
+    const files = await File.findAll({
+      where:{
+        user_id:req.body.id
+      }
+    });
+ 
+    const formattedFiles = files.map(file => ({
+      filename: file.filename,
+      uploaded_at: file.createdAt.toISOString().split('T')[0],
+      url: `${req.protocol}://${req.get('host')}/uploads/${file.filename}`,
+      fileType: file.fileType // include this!
+    }));
+
+    return res.status(200).json(formattedFiles);
+     
+  }catch (error){
+    console.log(error)
   }
 }
